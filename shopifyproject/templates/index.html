@@ -1,10 +1,72 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} 
-    Calicut Garbage Collection  
+{% block metadescription %}
+  {% if category %}
+    {{ category.description | truncatewords:150 }}
+  {% else %}
+    Welcome to SHOPIFY
+  {% endif %}
+{% endblock %}
+{% block title %}
+  {% if category %}
+    {{ category.name }} - Shopify
+  {% else %}
+    See our new collections -Shopify
+  {% endif %}
 {% endblock %}
 {% block content %}
+  {% if category %}
+    <div>
+      <div class="row my_row_class">
+        <div class="mx_auto">
+        <p><a href="">Our Products Collections</a></p>
+      </div>
+        </div>
+    </div>
+  {% endif %}
+<div class="mx_auto">
+  {% if category %}
+  <img  src="" alt="" width="100%" height="500px">
+</div>
+<br>
 <div>
-    <h1>hello Shopify</h1>
+  <h1 class="text-center my_title"></h1>
+  <p class="text-justify"></p>
+</div>
+  {% else %}
+<div>
+  <img class="my_image my_image_padding" src="" alt="bannerimage" width="100%" height="450px">
+</div>
+<br>
+<div>
+  <h1 class="text-center my_title">Our Products Collections</h1>
+  <p class="text-justify">Since Ecommerce Collections are in fact dynamic Collections, adding products and categories is very similar to creating collection items. However, unlike CMS Collections, Ecommerce Collections have a set of default fields that you cannot edit in the Collection schema. Still, you can add custom fields to enrich your Ecommerce Collections. For example, you can add color fields, switch fields, and even a file field where you can upload a catalog of your category or PDF specs of your product.</p>
+</div>
+  {% endif %}
+<div class="container">
+  <div class="row mx_auto">
+    {% for product in products.object_list %}
+    <div class="my_bottom_margin col-9 col-sm-12 col-md-4 col-lg-4">
+      <div class="card text-center" style="min-width:18rem;">
+        <a href=""><img class="card-img-top" src="" alt="" width="100%" height="250px"> </a>
+        <div class="card-body">
+          <h2>{{product.name}}</h2>
+          <p>{{product.price}}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="mx_auto">
+    {% if products.paginator.num_pages > 1 %}
+      <hr>
+        <div class="text-center">
+          {% for pg in products.paginator.page_range %}
+            <a href="?page={{pg}}" class="btn btn-light btn-sm {% if products.number == pg %} active {% endif %}">{{pg}}</a>
+          {% endfor %}
+        </div>
+    {% endif %}
+  </div>
+  <br>
 </div>
 {% endblock %}
