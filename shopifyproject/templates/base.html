@@ -28,7 +28,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="">
+                            <a class="nav-link text-dark" href="{% url 'shopifyapp:index' %}">
                                 <i class="fa-solid fa-house"></i> HOME
                             </a>
                         </li>
@@ -42,10 +42,16 @@
                                 <li><a class="dropdown-item" href="">Logout</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item dropdown"  style="margin-left: 10px;">
+                        <li class="nav-item dropdown {% if 'shopifyeapp' in request.path %} active {% endif %}"  style="margin-left: 10px;">
                             <a class="nav-link dropdown-toggle text-dark" href="#" id="homeDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-list"></i> SHOP
                             </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'shopifyapp:index' %}">All PRODUCTS</a></li>
+                                  {% for cat in links %}
+                                <li><a class="dropdown-item" href="{{cat.get_url}}">{{cat.name}}</a></li>
+                                  {% endfor %}
+                              </ul>
                         </li>
                         <li class="nav-item" style="margin-left: 10px;">
                             <a class="nav-link text-dark" href="">
@@ -54,7 +60,7 @@
                         </li>
                     </ul>
                 </div>
-        </nav>
+            </nav>
     </div>
        
         {% block content %}
@@ -66,8 +72,8 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
         <footer>
-            <div class="footer1" style="background-color: #e4e5f8 ">
-                <p> &copy; Calicut Garbage Collection. All rights reserved </p>
+            <div class="footer1" style="background-color: #eef2fb ">
+                <p> &copy; Shopify Pvt Ltd. All rights reserved </p>
             </div>
         </footer>
     </div>
