@@ -12,7 +12,7 @@
 </head>
 <body>
     <div>
-        <div class="sticky-top" >
+        <div class="sticky-top nav-sec1" >
             <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
                 <a class="navbar-brand" href="{% url 'shopifyapp:index' %}">
                     <img class="logo1" src="{% static 'img/logoshop.png' %}" alt="Logo">
@@ -47,7 +47,7 @@
                                 <i class="fa-solid fa-list"></i> SHOP
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'shopifyapp:index' %}">All PRODUCTS</a></li>
+                                <li><a class="dropdown-item" href="{% url 'shopifyapp:index' %}">All Products</a></li>
                                   {% for cat in links %}
                                 <li><a class="dropdown-item" href="{{cat.get_url}}">{{cat.name}}</a></li>
                                   {% endfor %}
