@@ -8,12 +8,8 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-<div class="mx_auto" style="margin-top: 35px;">
+<div style="margin-top: 30px;">
   {% if category %}
-  <img  src="{{category.image.url}}" alt="{{category.name}}" width="100%" height="300px">
-</div>
-<br>
-<div>
   <h1 class="text-center my_title">{{category.name}}</h1>
 </div>
   {% else %}
@@ -47,12 +43,12 @@
 <div class="container">
   <div class="row mx_auto">
     {% for product in products.object_list %}
-    <div class="my_bottom_margin col-9 col-sm-12 col-md-4 col-lg-4">
-      <div class="card text-center" style="min-width:18rem;">
-        <a href="{{product.get_url}}"><img class="card-img-top" src="{{product.image.url}}" alt="{{product.name}}" width="100%" height="250px"> </a>
+    <div class="col-12 col-md-3" style="margin-top:30px;">
+      <div class="card text-center" style="min-width:16rem;">
+        <a href="{{product.get_url}}"><img class="card-img-top" src="{{product.image.url}}" alt="{{product.name}}" width="75%" height="150px"> </a>
         <div class="card-body">
-          <h2>{{product.name}}</h2>
-          <p>{{product.price}}</p>
+          <h2 class="index-sec1">{{product.name}}</h2>
+          <p>₹{{product.price}} per Kg</p>
         </div>
       </div>
     </div>
@@ -71,3 +67,5 @@
   <br>
 </div>
 {% endblock %}
+
+

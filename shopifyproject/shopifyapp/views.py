@@ -12,12 +12,11 @@ def index(request, c_slug=None):
     else:
         products_list = Product.objects.filter(available=True)
 
-    paginator = Paginator(products_list, 6)
+    paginator = Paginator(products_list, 12)
     try:
         page = int(request.GET.get('page', '1'))
     except ValueError:
         page = 1
-
     try:
         products = paginator.page(page)
     except (EmptyPage, InvalidPage):
