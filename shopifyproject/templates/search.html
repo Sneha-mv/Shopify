@@ -20,7 +20,7 @@
               <p class="text-danger" style="font-weight:bold; font-size:20px;">Out Of Stock</p>
             {% else %}
               <br>
-              <a href="" class="btn btn-danger btn-lg product-sec4">Add To Cart</a>
+              <a href="{% url 'shopifyapp:index' %}" class="btn btn-danger btn-lg product-sec4">Add To Cart</a>
             {% endif %}
             </div>
         {% empty %}
