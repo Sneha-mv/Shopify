@@ -106,6 +106,39 @@ body {
     text-transform:uppercase;
 }
 
+.index-sec2{
+    background-color: #064389; 
+    border: none; 
+    border-radius: 20px; 
+    padding: 10px 20px;
+    margin-top: 5px;
+}
 
+/* product page */
+.product-sec1{
+    border: 2px solid #ddd; 
+    border-radius: 8px;
+    width: 80%;
+    height: 550px;
+    margin-left: 120px;
+}
 
+.product-sec2{
+    width:300px; 
+    height:300px; 
+}
 
+.product-sec3{
+    font-size: 32px;
+    padding-top: 20px; 
+    text-transform:uppercase; 
+    letter-spacing:.05em;
+    font-family: 'Merriweather', 'Times New Roman', Times, serif;
+    font-weight:bold;
+}
+
+.product-sec4{
+    border-radius: 15px;
+    font-size: 18px;
+    font-family: 'Poppins', sans-serif;
+}

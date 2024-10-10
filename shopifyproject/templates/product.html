@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {{ product.name }} - Shopify
+{% endblock %}
+{% block content %}
+<div class="container my-5" style="height: 550px;">
+  <div class="card product-sec1">
+    <div class="row g-0">
+      <div class="col-12 col-md-6 d-flex justify-content-center align-items-center p-3">
+        <img src="{{product.image.url}}" alt="{{product.name}}" class="product-sec2">
+      </div>
+      <div class="col-12 col-md-6 p-4" style="margin-inline-start: -30px;">
+        <h1 class="product-sec3">{{product.name}}</h1>
+        <p style="font-size: 20px;">₹{{product.price}} per Kg</p>
+        <p style="font-weight:bold; font-size:20px;"><u>Product Description</u></p>
+        <p class="text-justify" style="line-height: 1.8;">{{product.description}}</p>
+        {% if product.stock <= 0 %}
+          <p class="text-danger" style="font-weight:bold; font-size:20px;">Out Of Stock</p>
+        {% else %}
+          <br>
+          <a href="" class="btn btn-danger btn-lg product-sec4">Add To Cart</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- End of Card -->
+</div>
+{% endblock %}
+
+
