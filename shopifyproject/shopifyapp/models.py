@@ -42,31 +42,18 @@ class Product(models.Model):
         return '{}'.format(self.name)
     
 
-class Cart(models.Model):
-    cart_id = models.CharField(max_length=250, blank=True)
-    date_added = models.DateField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['date_added']
-        db_table = 'Cart'
-
-    def __str__(self):
-        return self.cart_id
+class Shopify(models.Model):
+    username=models.CharField(max_length=20)
+    email=models.EmailField(unique=True)
+    password=models.CharField(max_length=30)
+    cpassword=models.CharField(max_length=30)
+    
+    def __str__(self):  
+        return self.username
 
 
-class CartItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    active = models.BooleanField(default=True)
 
-    class Meta:
-        db_table = 'CartItem'
 
-    def sub_total(self):
-        return self.product.price * self.quantity
 
-    def __str__(self):
-        return self.product.name
     
 

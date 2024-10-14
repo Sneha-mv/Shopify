@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category,Product
+from .models import Category,Product,Shopify
 
 # Register your models here.
 class CategoryAdmin(admin.ModelAdmin):
@@ -14,6 +14,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 20
 admin.site.register(Product,ProductAdmin)
 
-
+admin.site.register(Shopify)
 
 
