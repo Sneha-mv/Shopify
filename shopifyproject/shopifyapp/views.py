@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Category, Product
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Category, Product, Shopify
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.db.models import Q
+from django.contrib import messages
 
 # Create your views here.
 def index(request, c_slug=None):
@@ -41,5 +42,15 @@ def SearchResult(request):
         query=request.GET.get('q')
         products=Product.objects.all().filter(Q(name__contains=query) | Q(description__contains=query))
     return render(request,"search.html",{'query':query,'products':products})
+
+
+def register(request):
+    return render(request,'register.html')
+
+
+def login(request):
+    return render(request,"login.html")
+
+
 
 
