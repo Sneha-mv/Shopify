@@ -54,8 +54,11 @@
                             </ul>
                         </li>
                         <li class="nav-item" style="margin-left: 10px;">
-                            <a class="nav-link text-dark" href="">
-                                <i class="fa-solid fa-cart-shopping"></i> CART
+                            <a class="nav-link text-dark" href="{% url 'shopifyapp:cart_detail' %}">
+                                <i class="fa-solid fa-cart-shopping"></i> CART 
+                                {% if item_count > 0 %}
+                                ({{item_count}})
+                                {% endif %}
                             </a>
                         </li>
                         

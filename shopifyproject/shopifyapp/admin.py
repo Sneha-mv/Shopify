@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category,Product,Shopify
+from .models import Category,Product,Shopify,Cart,CartItem
 
 # Register your models here.
 class CategoryAdmin(admin.ModelAdmin):
@@ -15,5 +15,16 @@ class ProductAdmin(admin.ModelAdmin):
 admin.site.register(Product,ProductAdmin)
 
 admin.site.register(Shopify)
+
+
+class CartAdmin(admin.ModelAdmin):
+    list_display = ['cart_id', 'date_added']
+admin.site.register(Cart, CartAdmin)
+
+
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ['product', 'quantity', 'sub_total']
+    list_filter = ['cart', 'product']
+admin.site.register(CartItem, CartItemAdmin)
 
 

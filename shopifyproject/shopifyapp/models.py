@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 # Create your models here.
 class Category(models.Model):
@@ -52,6 +53,37 @@ class Shopify(models.Model):
         return self.username
 
 
+class Cart(models.Model):
+    cart_id=models.CharField(max_length=250,blank=True)
+    date_added = models.DateField(default=timezone.now)
+
+    class Meta:
+        db_table='Cart'
+        ordering=['date_added']
+
+    def __str__(self):
+        return '{}'.format(self.cart_id)
+    
+
+class CartItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'CartItem'
+
+    def sub_total(self):
+        return self.product.price * self.quantity
+
+    def save(self, *args, **kwargs):
+        # Automatically update total amount on save
+        self.total_amount = self.sub_total()
+        super(CartItem, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.product.name
 
 
 
