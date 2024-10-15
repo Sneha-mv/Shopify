@@ -151,6 +151,17 @@ body {
     margin-top: 100px;
 }
 
-/* cart page */
+/* registration page */
+.reg-sec1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    background: #f0f0f0;
+    height: 600px;
+}
+
+
+
 
 
