@@ -4,92 +4,49 @@
     Sign Up
 {% endblock %}
 {% block content %}
-
-    <style>
-    
-        .registration-container {
-            display: flex;
-            width: 900px;
-            background: #fff;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .registration-image {
-            flex: 1;
-            background: url('{% static "img/registershop.avif" %}') no-repeat center center;
-            background-size: cover;
-        }
-
-        .registration-form {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .registration-form h2 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .registration-form p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .registration-form input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .registration-form button {
-            padding: 12px;
-            margin-top: 20px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: background 0.3s ease;
-        }
-
-        .registration-form button:hover {
-            background: #0056b3;
-        }
-
-        @media (max-width: 768px) {
-            .registration-container {
-                flex-direction: column;
-            }
-
-            .registration-image {
-                height: 200px;
-            }
-        }
-    </style>
+<style>
+    .reg-image{
+    flex: 1;
+    background: url("{% static 'img/registershop.avif' %}") no-repeat center center;
+    background-size: cover;
+}
+</style>
 <div class="reg-sec1">
-    <div class="registration-container">
-    <div class="registration-image"></div>
-        <div class="registration-form">
-            <h2>Register</h2>
+    <div class="reg-sec2">
+        <div class="reg-image"></div>
+        <div class="reg-form">
+            <h2>Create Account</h2>
             <p>Don't have an account? Register now and join us!</p>
-            <form action="#" method="POST">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                <button type="submit">Register</button>
+            <div id="error"></div>
+            <form action="#" method="POST" id="registration-form">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Username" id="username" required>
+                <input type="email" name="email" placeholder="Email" id="email" required>
+                <input type="password" name="password" placeholder="Password" id="password" required>
+                <div>
+                    <input type="password" name="cpassword" id="cpassword"  placeholder="Confirm Password" required oninput="checkPasswordMatch();">
+                    <span id="password-error"></span>
+                </div>
+                <button type="submit">sign up</button>
             </form>
         </div>
     </div>
 </div>
+<script>
+    function checkPasswordMatch() {
+        const password = document.getElementById('password').value;
+        const cpassword = document.getElementById('cpassword').value;
+        const errorMessage = document.getElementById('password-error');
 
+        if (password !== cpassword) {
+            errorMessage.style.display = 'inline'; // Show error message
+            document.getElementById('cpassword').setCustomValidity("Passwords do not match."); // Set custom validity
+        } else {
+            errorMessage.style.display = 'none'; // Hide error message
+            document.getElementById('cpassword').setCustomValidity(''); // Clear custom validity
+        }
+    }
+</script>
 {% endblock %}
+
+
