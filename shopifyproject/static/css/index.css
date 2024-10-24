@@ -158,7 +158,7 @@ body {
     align-items: center;
     margin: 0;
     background: #f0f0f0;
-    height: 600px;
+    height: 650px;
 }
 
 .reg-sec2{
@@ -168,8 +168,7 @@ body {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     border-radius: 20px;
     overflow: hidden;
-    margin-top: 10px;
-    height: 500px;
+    height: 550px;
 }
 
 .reg-form{

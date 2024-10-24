@@ -51,11 +51,26 @@ def register(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         cpassword = request.POST.get('cpassword')
+        
+        # Prepare errors dictionary
+        errors = {}
+        if Shopify.objects.filter(username=username).exists():
+            errors['username_error'] = 'Username already exists. Please choose another one.'
+        if Shopify.objects.filter(email=email).exists():
+            errors['email_error'] = 'Email already registered. Please use another email.'
+        if len(password) < 8:
+            errors['password_length_error'] = 'Password must be at least 8 characters long.'
+        if password != cpassword:
+            errors['password_mismatch'] = 'Passwords do not match.'
+        if errors:
+            return render(request, 'register.html', errors)
 
+        # Save the user if there are no errors
         user = Shopify(username=username, email=email, password=password, cpassword=cpassword)
         user.save()
         return redirect('shopifyapp:index')
-    return render(request,'register.html')
+    return render(request, 'register.html')
+
 
 
 def login(request):
