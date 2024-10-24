@@ -5,26 +5,12 @@
 {% endblock %}
 {% block content %}
 <style>
-    .reg-sec1 {
-        display: flex; /* Use Flexbox for layout */
-        height: 100vh; /* Full viewport height */
-    }
     .reg-image {
-        flex: 1; /* Takes up half of the available space */
-        background: url("{% static 'img/registershop.avif' %}") no-repeat center center;
+        flex: 1; 
+        background: url("{% static 'img/loginshop.jpg' %}") no-repeat center center;
         background-size: cover;
-        min-height: 100%; /* Ensure the image takes full height */
-    }
-    .reg-form {
-        flex: 1; /* Takes up the other half */
-        padding: 40px; /* Add some padding */
-        display: flex;
-        flex-direction: column;
-        justify-content: center; /* Center the form vertically */
-        background-color: #f9f9f9; /* Optional: Add a background color */
     }
     .error-box {
-        display: none; /* Hide error boxes by default */
         background-color: #f8d7da;
         color: #721c24;
         border-left: 4px solid #f5c6cb;
@@ -32,9 +18,10 @@
         margin-top: 5px;
         font-size: 14px;
         border-radius: 3px;
+        display: none; 
     }
     .error-box.show {
-        display: block; /* Show error box when this class is added */
+        display: block; /* Show when 'show' class is added */
     }
     .error-box i {
         margin-right: 5px;
@@ -42,45 +29,63 @@
     }
 </style>
 
-<div class="reg-sec1">
-    <div class="reg-form">
-        <h2>Log In</h2>
-        <p>Welcome back! Please log in to your account.</p>
-        <form action="#" method="POST" id="registration-form">
-            {% csrf_token %}
-            <div>
-                <input type="email" name="email" placeholder="Email" id="email" required>
-                <div class="error-box {% if errors.email_error %}show{% endif %}" id="email-error">
-                    <i class="fa fa-exclamation-circle"></i>
-                    {{ errors.email_error }}
+<div class="log-sec1">
+    <div class="log-sec2">
+        <div class="reg-form">
+            {% if messages %}
+                <div>
+                    {% for message in messages %}
+                    <div class="log-alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
                 </div>
-            </div>
-            <div>
-                <input type="password" name="password" placeholder="Password" id="password" required>
-                <div class="error-box {% if errors.password_error %}show{% endif %}" id="password-length-error">
-                    <i class="fa fa-exclamation-circle"></i>
-                    {{ errors.password_error }}
+            {% endif %}
+
+            <h2 style="margin-top: 15px;">Log In</h2>
+            <p>Welcome back! Please log in to your account.</p>
+            <form action="#" method="POST" id="registration-form">
+                {% csrf_token %}
+                <div>
+                    <input type="email" name="email" placeholder="Email" id="email" required>
+                    <div class="error-box {% if errors.email_error %}show{% endif %}" id="email-error">
+                        <i class="fa fa-exclamation-circle"></i>
+                         {{ errors.email_error }}
+                    </div>
                 </div>
-            </div>
-            <div class="forgot-password">
-                <a href="">Forgot your password?</a>
-            </div>
-            <button type="submit">Sign In</button>
-        </form>
+                <div>
+                    <input type="password" name="password" placeholder="Password" id="password" required>
+                    <div class="error-box {% if errors.password_error %}show{% endif %}" id="password-length-error">
+                        <i class="fa fa-exclamation-circle"></i>
+                         {{ errors.password_error }}
+                    </div>
+                </div>
+                <div class="forgot-password" style="margin-top: 25px;margin-left: 135px;">
+                    <a href="" style="text-decoration: none;color: black;">Forgot your password?</a>
+                </div>
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+        <div class="reg-image"></div> 
     </div>
-    <div class="reg-image"></div> <!-- Ensure this is on the right -->
 </div>
 
 <script>
-    // Show error if login failed
-    const loginError = "{{ errors }}"; // Update this to match your error context
-    if (loginError) {
-        const errorMessage = document.getElementById('email-error');
-        const passwordError = document.getElementById('password-length-error');
+    document.addEventListener('DOMContentLoaded', function () {
+        const emailError = "{{ errors.email_error|default:'' }}";
+        const passwordError = "{{ errors.password_error|default:'' }}";
 
-        // If there's a login error, add the 'show' class to display error messages
-        errorMessage.classList.add('show');
-        passwordError.classList.add('show');
-    }
+        if (emailError) {
+            const emailErrorBox = document.getElementById('email-error');
+            emailErrorBox.classList.add('show');
+        }
+
+        if (passwordError) {
+            const passwordErrorBox = document.getElementById('password-length-error');
+            passwordErrorBox.classList.add('show');
+        }
+    });
 </script>
 {% endblock %}
+
+

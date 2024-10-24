@@ -231,5 +231,31 @@ body {
     }
 }
 
+/* login page */
+.log-sec1{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    background: #f0f0f0;
+    height: 650px;
+}
 
+.log-sec2{
+    display: flex;
+    width: 900px;
+    background: #fff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    height: 550px;
+}
 
+.log-alert {
+    background-color: #dff0d8; 
+    color: #3c763d; 
+    border-left: 4px solid #3c763d; 
+    padding: 10px;
+    border-radius: 3px;
+    padding-left: 65px;
+}
