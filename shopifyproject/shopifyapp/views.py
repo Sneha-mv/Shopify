@@ -68,13 +68,51 @@ def register(request):
         # Save the user if there are no errors
         user = Shopify(username=username, email=email, password=password, cpassword=cpassword)
         user.save()
-        return redirect('shopifyapp:index')
+        return redirect('shopifyapp:login')
     return render(request, 'register.html')
 
 
 
+
 def login(request):
-    return render(request,"login.html")
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        # Prepare errors dictionary
+        errors = {}
+        
+        # Check if both email and password are provided
+        if not email or not password:
+            errors['no_email_no_password'] = 'Please enter both email and password'
+        
+        # Try to get the user by email
+        try:
+            user = Shopify.objects.get(email=email)
+        except Shopify.DoesNotExist:
+            errors['email_error'] = 'Invalid email or password'
+            user = None
+
+        # Check if password matches the stored password
+        if user and user.password != password:
+            errors['password_error'] = 'Invalid email or password'
+
+        # If there are any errors, render the login page with errors
+        if errors:
+            return render(request, 'login.html', {'errors': errors})
+
+        # If everything is correct, redirect to the index page
+        return redirect('shopifyapp:index')
+
+    return render(request, 'login.html')
+
+
+        
+            
+
+
+
+
 
 
 

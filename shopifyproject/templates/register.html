@@ -95,33 +95,7 @@
     if (passwordMismatch) {
         const errorMessage = document.getElementById('password-error');
         errorMessage.style.display = 'block';
-    }
-
-    // Password validation for real-time checking
-    function checkPasswordMatch() {
-        const password = document.getElementById('password').value;
-        const cpassword = document.getElementById('cpassword').value;
-        const errorMessage = document.getElementById('password-error');
-        const passwordLengthError = document.getElementById('password-length-error');
-
-        // Check for minimum length
-        if (password.length < 8) {
-            passwordLengthError.style.display = 'block'; // Show error box
-            document.getElementById('password').setCustomValidity("Password must be at least 8 characters long."); // Set custom validity
-        } else {
-            passwordLengthError.style.display = 'none'; // Hide error box
-            document.getElementById('password').setCustomValidity(''); // Clear custom validity
-        }
-
-        // Check if passwords match
-        if (password !== cpassword) {
-            errorMessage.style.display = 'block'; // Show error box
-            document.getElementById('cpassword').setCustomValidity("Passwords do not match."); // Set custom validity
-        } else {
-            errorMessage.style.display = 'none'; // Hide error box
-            document.getElementById('cpassword').setCustomValidity(''); // Clear custom validity
-        }
-    }
+    }   
 </script>
 {% endblock %}
 
