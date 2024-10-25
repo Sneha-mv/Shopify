@@ -1,0 +1,551 @@
+from django.urls import path
+from . import views
+
+app_name = 'shopifyapp'
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<slug:c_slug>/',views.index,name='category'),
+    path('<slug:c_slug>/<slug:product_slug>/',views.proDetail,name='proDetail'),
+    path('searchresult',views.SearchResult,name='SearchResult'),
+    path('login',views.login,name='login'),
+    path('register', views.register, name='register'),
+    path('logout', views.logout, name='logout'),
+    path('add/<int:product_id>',views.add_cart,name='add_cart'),
+    path('cart_detail',views.cart_detail,name='cart_detail'),
+    path('remove/<int:product_id>',views.cart_remove,name='cart_remove'),
+    path('full_remove/<int:product_id>',views.full_remove,name='full_remove'),
+]   this is my urls.py and from django.shortcuts import render, get_object_or_404, redirect
+from .models import Category, Product, Shopify, Cart, CartItem
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
+from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
+
+# Create your views here.
+def index(request, c_slug=None):
+    c_page = None
+    products_list = None
+    if c_slug:
+        c_page = get_object_or_404(Category, slug=c_slug)
+        products_list = Product.objects.filter(category=c_page, available=True)
+    else:
+        products_list = Product.objects.filter(available=True)
+
+    paginator = Paginator(products_list, 12)
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    try:
+        products = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        products = paginator.page(paginator.num_pages)
+
+    return render(request, "index.html", {'category': c_page, 'products': products})
+
+
+def proDetail(request, c_slug, product_slug):
+    try:
+        product = Product.objects.get(category__slug=c_slug, slug=product_slug)
+    except Product.DoesNotExist:
+        product = None  # Handle the missing product case gracefully
+    return render(request, "product.html", {'product': product})
+
+
+def SearchResult(request):
+    products=None
+    query=None
+    if 'q' in request.GET:
+        query=request.GET.get('q')
+        products=Product.objects.all().filter(Q(name__contains=query) | Q(description__contains=query))
+    return render(request,"search.html",{'query':query,'products':products})
+
+
+def register(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        cpassword = request.POST.get('cpassword')
+        
+        # Prepare errors dictionary
+        errors = {}
+        if Shopify.objects.filter(username=username).exists():
+            errors['username_error'] = 'Username already exists. Please choose another one.'
+        if Shopify.objects.filter(email=email).exists():
+            errors['email_error'] = 'Email already registered. Please use another email.'
+        if len(password) < 8:
+            errors['password_length_error'] = 'Password must be at least 8 characters long.'
+        if password != cpassword:
+            errors['password_mismatch'] = 'Passwords do not match.'
+        if errors:
+            return render(request, 'register.html', errors)
+
+        # Save the user if there are no errors
+        user = Shopify(username=username, email=email, password=password, cpassword=cpassword)
+        user.save()
+        return redirect('shopifyapp:login')
+    return render(request, 'register.html')
+
+
+def login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        errors = {}
+        try:
+            user = Shopify.objects.get(email=email)
+        except Shopify.DoesNotExist:
+            errors['email_error'] = 'Invalid email'
+            user = None
+        if user and user.password != password:
+            errors['password_error'] = 'Invalid password'
+        if errors:
+            return render(request, 'login.html', {'errors': errors})
+        # Set session data after successful login
+        request.session['user_id'] = user.id
+        return redirect('shopifyapp:index')
+    return render(request, 'login.html')
+
+
+def logout(request):
+    if 'user_id' in request.session:
+        request.session.flush()
+        messages.success(request, 'You have been logged out successfully.')
+    return redirect('shopifyapp:login')
+
+
+
+# Create your views here.
+def _cart_id(request):
+    cart=request.session.session_key
+    if not cart:
+        cart=request.session.create()
+    return cart
+
+def add_cart(request,product_id):
+    product=Product.objects.get(id=product_id)
+    try:
+        cart=Cart.objects.get(cart_id=_cart_id(request))
+    except Cart.DoesNotExist:
+        cart=Cart.objects.create(cart_id=_cart_id(request))
+        cart.save(),
+    try:
+        cart_item=CartItem.objects.get(product=product,cart=cart)
+        if cart_item.quantity < cart_item.product.stock:
+            cart_item.quantity +=1
+        cart_item.save()
+    except CartItem.DoesNotExist:
+        cart_item=CartItem.objects.create(product=product,quantity=1,cart=cart)
+        cart_item.save()
+    return redirect('shopifyapp:cart_detail')
+
+def cart_detail(request,total=0,counter=0,cart_items=None):
+    try:
+        cart = Cart.objects.get(cart_id=_cart_id(request))
+        cart_items=CartItem.objects.filter(cart=cart,active=True)
+        for cart_item in cart_items:
+            total += (cart_item.product.price * cart_item.quantity)
+            counter += cart_item.quantity
+    except ObjectDoesNotExist:
+        pass
+    return render(request,"cart.html",dict(cart_items=cart_items,total=total,counter=counter))
+
+def cart_remove(request,product_id):
+    cart = Cart.objects.get(cart_id=_cart_id(request))
+    product = get_object_or_404(Product,id=product_id)
+    cart_item = CartItem.objects.get(product=product, cart=cart)
+    if cart_item.quantity > 1:
+        cart_item.quantity -= 1
+        cart_item.save()
+    else:
+        cart_item.delete()
+    return redirect('shopifyapp:cart_detail')
+
+def full_remove(request,product_id):
+    cart = Cart.objects.get(cart_id=_cart_id(request))
+    product = get_object_or_404(Product, id=product_id)
+    cart_item = CartItem.objects.get(product=product, cart=cart)
+    cart_item.delete()
+    return redirect('shopifyapp:cart_detail')
+    this my views.py and from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+
+# Create your models here.
+class Category(models.Model):
+    name=models.CharField(max_length=250,unique=True)
+    slug=models.SlugField(max_length=250,unique=True)
+
+    class Meta:
+        ordering=('name',)
+        verbose_name='category'
+        verbose_name_plural='categories'
+
+    def get_url(self):
+        return reverse('shopifyapp:category',args=[self.slug])
+
+    def __str__(self):
+        return '{}'.format(self.name)
+
+    
+class Product(models.Model):
+    name = models.CharField(max_length=250, unique=True)
+    slug = models.SlugField(max_length=250, unique=True)
+    description = models.TextField(blank=True)
+    price=models.DecimalField(max_digits=10,decimal_places=2)
+    category=models.ForeignKey(Category,on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='product', blank=True)
+    stock=models.IntegerField()
+    available=models.BooleanField(default=True)
+    created=models.DateTimeField(auto_now_add=True)
+    updated=models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering=('name',)
+        verbose_name='product'
+        verbose_name_plural='products'
+
+    def get_url(self):
+        return reverse('shopifyapp:proDetail',args=[self.category.slug,self.slug])
+
+    def __str__(self):
+        return '{}'.format(self.name)
+    
+
+class Shopify(models.Model):
+    username=models.CharField(max_length=20)
+    email=models.EmailField(unique=True)
+    password=models.CharField(max_length=30)
+    cpassword=models.CharField(max_length=30)
+    
+    def __str__(self):  
+        return self.username
+
+
+class Cart(models.Model):
+    cart_id=models.CharField(max_length=250,blank=True)
+    date_added = models.DateField(default=timezone.now)
+
+    class Meta:
+        db_table='Cart'
+        ordering=['date_added']
+
+    def __str__(self):
+        return '{}'.format(self.cart_id)
+    
+
+class CartItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'CartItem'
+
+    def sub_total(self):
+        return self.product.price * self.quantity
+
+    def save(self, *args, **kwargs):
+        # Automatically update total amount on save
+        self.total_amount = self.sub_total()
+        super(CartItem, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.product.name
+
+
+
+
+    
+  this is my models.py and {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <script src="https://kit.fontawesome.com/8b8ca58c15.js" crossorigin="anonymous"></script>
+    <title> {% block title %} {% endblock %} </title>
+</head>
+<body>
+    <div>
+        <div class="sticky-top nav-sec1" >
+            <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+                <a class="navbar-brand" href="{% url 'shopifyapp:index' %}">
+                    <img class="logo1" src="{% static 'img/logoshop.png' %}" alt="Logo">
+                    <h class="logo2">Shopify</h>
+                </a>
+                <form class="d-flex" role="search" action="{% url 'shopifyapp:SearchResult' %}" method="get">
+                    {% csrf_token %}
+                    <div class="search-container">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input class="form-control me-2 search1" type="search" placeholder="Search for Products, Brands and More..." name="q" aria-label="Search">
+                    </div>
+                </form>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{% url 'shopifyapp:index' %}">
+                                <i class="fa-solid fa-house"></i> HOME
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown"  style="margin-left: 10px;">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="homeDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-user"></i> USER
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="homeDropdown">
+                                {% if request.session.user_id %}
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:login' %}">Login</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:register' %}">Register</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:logout' %}">Logout</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:login' %}">Login</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:register' %}">Register</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown {% if 'shopifyeapp' in request.path %} active {% endif %}"  style="margin-left: 10px;">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="homeDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-list"></i> SHOP
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'shopifyapp:index' %}">All Products</a></li>
+                                  {% for cat in links %}
+                                <li><a class="dropdown-item" href="{{cat.get_url}}">{{cat.name}}</a></li>
+                                  {% endfor %}
+                            </ul>
+                        </li>
+                        <li class="nav-item" style="margin-left: 10px;">
+                            <a class="nav-link text-dark" href="{% url 'shopifyapp:cart_detail' %}">
+                                <i class="fa-solid fa-cart-shopping"></i> CART 
+                                {% if item_count > 0 %}
+                                ({{item_count}})
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+       
+        {% block content %}
+        {% endblock %}
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+        <footer>
+            <div class="footer1" style="background-color: #eef2fb ">
+                <p> &copy; Shopify Pvt Ltd. All rights reserved </p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
+
+  this is my base.html and {% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {% if category %}
+    {{ category.name }} - Shopify
+  {% else %}
+    See our new collections -Shopify
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div style="margin-top: 30px;">
+  {% if category %}
+  <h1 class="text-center my_title">{{category.name}}</h1>
+</div>
+  {% else %}
+<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+  <ol class="carousel-indicators">
+      <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+      <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+  </ol>
+  <div class="carousel-inner">
+      <div class="carousel-item active">
+          <img class="d-block w-100 my_image" src="{% static 'img/bannershop.png' %}" alt="First slide">
+      </div>
+      <div class="carousel-item">
+          <img class="d-block w-100 my_image" src="{% static 'img/bannershop2.png' %}" alt="Second slide">
+      </div>
+  </div>
+  <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+  </a>
+  <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+  </a>
+</div>
+<br>
+<div>
+  <h1 class="text-center my_title">Our Products Collections</h1>
+</div>
+  {% endif %}
+<div class="container">
+  <div class="row mx_auto">
+    {% for product in products.object_list %}
+    <div class="col-12 col-md-3" style="margin-top:30px;">
+      <div class="card text-center" style="min-width:16rem;">
+        <a href="{{product.get_url}}"><img class="card-img-top" src="{{product.image.url}}" alt="{{product.name}}" width="75%" height="150px"> </a>
+        <div class="card-body">
+          <h2 class="index-sec1">{{product.name}}</h2>
+          <button class="index-sec2"><a href="{{product.get_url}}" style="color: white; text-decoration: none;">View Details</a></button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="mx_auto">
+    {% if products.paginator.num_pages > 1 %}
+      <hr>
+        <div class="text-center">
+          {% for pg in products.paginator.page_range %}
+            <a href="?page={{pg}}" class="btn btn-light btn-sm {% if products.number == pg %} active {% endif %}">{{pg}}</a>
+          {% endfor %}
+        </div>
+    {% endif %}
+  </div>
+  <br>
+</div>
+{% endblock %}
+
+   this is my index.html and {% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {{ product.name }} - Shopify
+{% endblock %}
+{% block content %}
+<div class="container my-5" style="height: 550px;">
+  <div class="card product-sec1">
+    <div class="row g-0">
+      <div class="col-12 col-md-6 d-flex justify-content-center align-items-center p-3">
+        <img src="{{product.image.url}}" alt="{{product.name}}" class="product-sec2">
+      </div>
+      <div class="col-12 col-md-6 p-4" style="margin-inline-start: -30px;">
+        <h1 class="product-sec3">{{product.name}}</h1>
+        <p>Product ID: {{ product.id }}</p>
+        <p style="font-size: 20px;">₹{{product.price}} per Kg</p>
+        <p style="font-weight:bold; font-size:20px;"><u>Product Description</u></p>
+        <p class="text-justify" style="line-height: 1.8;">{{product.description}}</p>
+        {% if product.stock <= 0 %}
+          <p class="text-danger" style="font-weight:bold; font-size:20px;">Out Of Stock</p>
+        {% else %}
+          <br>
+          <a href="{% url 'shopifyapp:add_cart' product.id %}" class="btn btn-danger btn-lg product-sec4">Add To Cart</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+   this is my product.html and {% extends 'base.html' %}
+{% load static %}
+{% block metadescription %}
+  This is the CartPage. Proceed to review your items and place the order.
+{% endblock %}
+{% block title %}
+  Cart-Shopify
+{% endblock %}
+
+{% block content %}
+{% if not cart_items %}
+<div>
+  <div class="text-center">
+    <br>
+    <h1 class="text-center my_title">Your Shopping Cart is Empty</h1>
+    <br>
+    <p class="text-center">Please Click<a href="">Here</a>to Continue Shopping </p>
+  </div>
+</div>
+{% else %}
+<div>
+  <div class="text-center">
+    <br>
+    <h1 class="text-center my_title">Your Shopping Cart</h1>
+    <br>
+  </div>
+</div>
+<div class="row mx_auto">
+  <div class="col-12 col-sm-12 col-md-12 col-lg-6 text-center">
+    <table class="table my_custom_table">
+      <thead class="my_custom_thead">
+      <tr>
+        <th colspan="5">Your Items</th>
+      </tr>
+      </thead>
+      <tbody>
+        {% for cart_item in cart_items %}
+        <tr>
+          <td>
+            <a href=""><img src="{{cart_item.product.image.url}}" alt="cart image" class="float-left rounded custom_image" style="width:150px;height:150px;">  </a>
+          </td>
+          <td class="text-left" style="font-size:18px; padding-top:20px;">
+            {{cart_item.product.name}}
+            <br>
+            SKU : {{cart_item.product.id}}
+            <br>
+            Price : ${{cart_item.product.price}}
+            <br>
+            Qty : {{cart_item.quantity}} X ${{cart_item}}
+          </td>
+          <td style="font-size:18px; padding-top:20px;">
+            ${{cart_item.sub_total}}
+          </td>
+          {% if cart_item.quantity < cart_item.product.stock %}
+          <td style="font-size:18px; padding-top:20px;">
+            <a href="{% url 'shopifyapp:add_cart' cart_item.product.id %}" class="custom_a"> <i class="fa-solid fa-plus custom_icon"></i></a>
+            &nbsp;<a href="{% url 'shopifyapp:cart_remove' cart_item.product.id %}" class="custom_a"><i class="fa-solid fa-minus custom_icon"></i></a>
+            &nbsp;<a href="{% url 'shopifyapp:full_remove' cart_item.product.id %}" class="custom_icon"><i class="fa-solid fa-trash-can custom_icon"></i></a>
+          </td>
+          {% else %}
+           <td style="font-size:18px; padding-top:20px;">
+             &nbsp;<a href="{% url 'shopifyapp:cart_remove' cart_item.product.id %}" class="custom_a"><i class="fa-solid fa-minus custom_icon"></i></a>
+             &nbsp;<a href="{% url 'shopifyapp:full_remove' cart_item.product.id %}" class="custom_icon"><i class="fa-solid fa-trash-can custom_icon"></i></a>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-6 text-center">
+    <table class="table my_custom_table">
+       <thead class="my_custom_thead">
+       <tr>
+         <th>CHECKOUT</th>
+       </tr>
+       </thead>
+      <tbody>
+      <tr>
+        <td>Please review your cart items before proceeding with the order payment.</td>
+      </tr>
+      <tr>
+        <td class="text-left">
+          Your Total is :<strong>{{ total }}</strong>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <div class="mx_auto">
+      <a href="" class="btn btn-secondary btn-block my_custom_button" style="margin-top:20px;">Continue Shopping</a>
+            <a href="" class="btn btn-secondary btn-block my_custom_button" style="margin-left:30px;margin-top:20px;">Make Payment</a>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+  this is my cart.html...here what i want is a user add some items to cart..and if the user logout the items are dispear here..i dont want this..when a user logout and then login the user should able to see all the items that he put in his cart..please give me the right code for this

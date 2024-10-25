@@ -45,10 +45,14 @@
     {% for product in products.object_list %}
     <div class="col-12 col-md-3" style="margin-top:30px;">
       <div class="card text-center" style="min-width:16rem;">
-        <a href="{{product.get_url}}"><img class="card-img-top" src="{{product.image.url}}" alt="{{product.name}}" width="75%" height="150px"> </a>
+        <img class="card-img-top" src="{{product.image.url}}" alt="{{product.name}}" width="75%" height="150px"> 
         <div class="card-body">
           <h2 class="index-sec1">{{product.name}}</h2>
+          {% if request.session.user_id %}
           <button class="index-sec2"><a href="{{product.get_url}}" style="color: white; text-decoration: none;">View Details</a></button>
+          {% else %}
+          <button class="index-sec2"><a href="{% url 'shopifyapp:login' %}" style="color: white; text-decoration: none;">Log In For View Details</a></button> 
+          {% endif %}
         </div>
       </div>
     </div>

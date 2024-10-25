@@ -37,9 +37,14 @@
                                 <i class="fa-solid fa-user"></i> USER
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="homeDropdown">
-                                <li><a class="dropdown-item" href="{% url 'shopifyapp:login' %}">Login</a></li>
-                                <li><a class="dropdown-item" href="{% url 'shopifyapp:register' %}">Register</a></li>
-                                <li><a class="dropdown-item" href="{% url 'shopifyapp:logout' %}">Logout</a></li>
+                                {% if request.session.user_id %}
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:login' %}">Login</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:register' %}">Register</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:logout' %}">Logout</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:login' %}">Login</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'shopifyapp:register' %}">Register</a></li>
+                                {% endif %}
                             </ul>
                         </li>
                         <li class="nav-item dropdown {% if 'shopifyeapp' in request.path %} active {% endif %}"  style="margin-left: 10px;">
@@ -54,18 +59,15 @@
                             </ul>
                         </li>
                         <li class="nav-item" style="margin-left: 10px;">
-                            <a class="nav-link text-dark" href="{% url 'shopifyapp:cart_detail' %}">
+                            <a class="nav-link text-dark" href="">
                                 <i class="fa-solid fa-cart-shopping"></i> CART 
-                                {% if item_count > 0 %}
-                                ({{item_count}})
-                                {% endif %}
+                                
                             </a>
                         </li>
-                        
                     </ul>
                 </div>
             </nav>
-    </div>
+        </div>
        
         {% block content %}
         {% endblock %}
